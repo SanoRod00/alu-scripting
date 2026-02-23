@@ -5,14 +5,15 @@ import requests
 
 
 def top_ten(subreddit):
-    """Print titles of the first 10 hot posts for subreddit, else None."""
-    url = "https://www.reddit.com/r/{}/hot.json?limit=10".format(subreddit)
-    headers = {"User-Agent": "ALX-API-Advanced"}
+    """Print titles of first 10 hot posts for a subreddit, else None."""
+    url = "https://www.reddit.com/r/{}/hot.json".format(subreddit)
+    headers = {"User-Agent": "Mozilla/5.0"}
 
     try:
         response = requests.get(
             url,
             headers=headers,
+            params={"limit": 10},
             allow_redirects=False,
         )
     except requests.RequestException:
@@ -30,4 +31,6 @@ def top_ten(subreddit):
         return
 
     for post in posts[:10]:
-        print(post.get("data", {}).get("title"))
+        title = post.get("data", {}).get("title")
+        if isinstance(title, str):
+            print(title)
