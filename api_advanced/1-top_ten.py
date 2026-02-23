@@ -1,15 +1,15 @@
 #!/usr/bin/python3
 """Print the titles of the first 10 hot posts for a subreddit."""
-import requests
+from reddit_oauth import oauth_get
 
 
 def top_ten(subreddit):
     """Query Reddit API and print titles of first 10 hot posts."""
-    url = "https://www.reddit.com/r/{}/hot.json?limit=10".format(subreddit)
-    headers = {"User-Agent": "Mozilla/5.0"}
-    response = requests.get(url, headers=headers, allow_redirects=False)
-
-    if response.status_code != 200:
+    response = oauth_get(
+        "/r/{}/hot.json".format(subreddit),
+        params={"limit": 10},
+    )
+    if response is None or response.status_code != 200:
         print(None)
         return
 

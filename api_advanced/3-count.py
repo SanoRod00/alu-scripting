@@ -1,52 +1,44 @@
 #!/usr/bin/python3
-""" 3-count.py """
-import requests
+"""Count given keywords in hot article titles for a subreddit."""
+from reddit_oauth import oauth_get
 
 
-def count_words(subreddit, word_list, after="", count=[]):
-    """ prints a sorted count of given keywords """
+def count_words(subreddit, word_list, after=None, word_count=None):
+    """Print word frequencies sorted by count desc, then alphabetically."""
+    if word_count is None:
+        word_count = {}
+        for word in word_list:
+            word_count[word.lower()] = 0
 
-    if after == "":
-        count = [0] * len(word_list)
+    if not word_count:
+        return
 
-    url = "https://www.reddit.com/r/{}/hot.json".format(subreddit)
-    request = requests.get(url,
-                           params={'after': after},
-                           allow_redirects=False,
-                           headers={'User-Agent': 'Mozilla/5.0'})
+    params = {"limit": 100}
+    if after:
+        params["after"] = after
 
-    if request.status_code == 200:
-        data = request.json()
+    response = oauth_get("/r/{}/hot.json".format(subreddit), params=params)
+    if response is None or response.status_code != 200:
+        return
 
-        for topic in (data['data']['children']):
-            for word in topic['data']['title'].split():
-                for i in range(len(word_list)):
-                    if word_list[i].lower() == word.lower():
-                        count[i] += 1
+    data = response.json().get("data", {})
+    posts = data.get("children", [])
 
-        after = data['data']['after']
-        if after is None:
-            save = []
-            for i in range(len(word_list)):
-                for j in range(i + 1, len(word_list)):
-                    if word_list[i].lower() == word_list[j].lower():
-                        save.append(j)
-                        count[i] += count[j]
+    for post in posts:
+        title = post.get("data", {}).get("title", "")
+        for token in title.split():
+            lowered = token.lower()
+            if lowered in word_count:
+                word_count[lowered] += 1
 
-            for i in range(len(word_list)):
-                for j in range(i, len(word_list)):
-                    if (count[j] > count[i] or
-                            (word_list[i] > word_list[j] and
-                             count[j] == count[i])):
-                        aux = count[i]
-                        count[i] = count[j]
-                        count[j] = aux
-                        aux = word_list[i]
-                        word_list[i] = word_list[j]
-                        word_list[j] = aux
+    next_after = data.get("after")
+    if next_after:
+        return count_words(subreddit, word_list, next_after, word_count)
 
-            for i in range(len(word_list)):
-                if (count[i] > 0) and i not in save:
-                    print("{}: {}".format(word_list[i].lower(), count[i]))
-        else:
-            count_words(subreddit, word_list, after, count)
+    sorted_counts = sorted(
+        word_count.items(),
+        key=lambda item: (-item[1], item[0]),
+    )
+    for word, total in sorted_counts:
+        if total > 0:
+            print("{}: {}".format(word, total))
