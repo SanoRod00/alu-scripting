@@ -65,7 +65,7 @@ def get_access_token():
 
 
 def oauth_get(path, params=None):
-    """GET Reddit data with OAuth when available, else fallback to public API."""
+    """GET Reddit data with OAuth when possible, else use public endpoint."""
     token = get_access_token()
 
     if token:

@@ -6,6 +6,7 @@ from reddit_oauth import oauth_get
 def recurse(subreddit, hot_list=[]):
     """Return a list of hot post titles for a subreddit."""
     titles = list(hot_list)
+
     def _fetch(after=None):
         params = {"limit": 100}
         if after:
