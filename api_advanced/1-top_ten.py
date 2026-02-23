@@ -1,17 +1,30 @@
 #!/usr/bin/python3
 """Print the titles of the first 10 hot posts for a subreddit."""
-from reddit_oauth import oauth_get
+
+import requests
 
 
 def top_ten(subreddit):
-    """Query Reddit API and print titles of first 10 hot posts."""
-    response = oauth_get("/r/{}/hot.json".format(subreddit), params={"limit": 10})
-    if response is None or response.status_code != 200:
+    """Print the titles of the first 10 hot posts, or None if invalid."""
+    url = "https://www.reddit.com/r/{}/hot.json?limit=10".format(subreddit)
+    headers = {"User-Agent": "python:api_advanced:v1.0 (by /u/reddit_user)"}
+
+    try:
+        response = requests.get(
+            url,
+            headers=headers,
+            allow_redirects=False,
+            timeout=10,
+        )
+    except requests.RequestException:
         print(None)
         return
 
-    data = response.json().get("data", {})
-    posts = data.get("children", [])
+    if response.status_code != 200:
+        print(None)
+        return
+
+    posts = response.json().get("data", {}).get("children", [])
     for post in posts:
         title = post.get("data", {}).get("title")
         if title is not None:
