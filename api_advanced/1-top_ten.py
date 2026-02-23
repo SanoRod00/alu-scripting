@@ -1,20 +1,19 @@
 #!/usr/bin/python3
-"""Print the titles of the first 10 hot posts for a subreddit."""
+"""Query Reddit API and print titles of the first 10 hot posts."""
 
 import requests
 
 
 def top_ten(subreddit):
-    """Print the titles of the first 10 hot posts, or None if invalid."""
+    """Print titles of the first 10 hot posts for subreddit, else None."""
     url = "https://www.reddit.com/r/{}/hot.json?limit=10".format(subreddit)
-    headers = {"User-Agent": "python:api_advanced:v1.0 (by /u/reddit_user)"}
+    headers = {"User-Agent": "ALX-API-Advanced"}
 
     try:
         response = requests.get(
             url,
             headers=headers,
             allow_redirects=False,
-            timeout=10,
         )
     except requests.RequestException:
         print(None)
@@ -24,8 +23,11 @@ def top_ten(subreddit):
         print(None)
         return
 
-    posts = response.json().get("data", {}).get("children", [])
-    for post in posts:
-        title = post.get("data", {}).get("title")
-        if title is not None:
-            print(title)
+    try:
+        posts = response.json().get("data", {}).get("children", [])
+    except ValueError:
+        print(None)
+        return
+
+    for post in posts[:10]:
+        print(post.get("data", {}).get("title"))
